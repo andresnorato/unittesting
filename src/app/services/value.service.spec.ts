@@ -39,22 +39,23 @@ fdescribe('ValueService', () => {
           doneFn();
         });
     });
+
+
+
+    it('should return "promiseValue from promise using async', async () => {
+      const rta = await service.getPromiseValue()
+      expect(rta).toBe('Promise value');
+    });
   });
 
-
-  it('should return "promiseValue from promise using async', async () => {
-    const rta = await service.getPromiseValue()
-    expect(rta).toBe('Promise value');
-  });
-
-
+  /// Resolve
   describe('Tests for getObservable', () => {
     it('should return "Observable value" from observable', (doneFn) => {
       service.getObservableValue()
-      .subscribe(rta =>{
-        expect(rta).toBe('Observable value');
-        doneFn();
-      })
+        .subscribe(rta => {
+          expect(rta).toBe('Observable value');
+          doneFn();
+        })
     })
   });
 
