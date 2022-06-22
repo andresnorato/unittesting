@@ -44,8 +44,6 @@ fdescribe('ProductsService', () => {
     });
   });
 
-
-
   describe('test for getAll', () => {
 
     it('sholud return a product list', (doneFn) => {
@@ -66,6 +64,31 @@ fdescribe('ProductsService', () => {
       httpController.verify();
     });
 
+
+    it('sholud send query with limit 10 and offset 3', (doneFn) => {
+      //Arrange
+      const mockData: Product[] = generateManyProducts(3);
+      const limit = 10;
+      const offset = 3;
+      //Act
+      productService.getAll(limit, offset)
+      .subscribe((data)=>{
+        //Assert
+        expect(data.length).toEqual(mockData.length);
+        // expect(data).toEqual(mockData);
+        doneFn();
+      });
+
+      //HTPP CONFIG
+      const req = httpController.expectOne(`${environment.API_URL}/api/v1/products?limit=${limit}&offset=${offset}`);
+      req.flush(mockData);
+      const params = req.request.params;
+      expect(params.get('limit')).toEqual(`${limit}`);
+      expect(params.get('offset')).toEqual(`${offset}`);
+      httpController.verify();
+    });
+
+
     it('should return product list with taxes', (doneFn) => {
       const mockData: Product[] = [
         {
@@ -75,7 +98,15 @@ fdescribe('ProductsService', () => {
         {
           ...generateOneProduct(),
           price: 200, // 38
-        }
+        },
+        {
+          ...generateOneProduct(),
+          price: 0 // * .19 = 0
+        },
+        {
+          ...generateOneProduct(),
+          price: -100 // * .19 = 0
+        },
       ];
 
         productService.getAll()
@@ -83,6 +114,8 @@ fdescribe('ProductsService', () => {
           expect(data.length).toEqual(mockData.length);
           expect(data[0].taxes).toEqual(19);
           expect(data[1].taxes).toEqual(38);
+          expect(data[2].taxes).toEqual(0);
+          expect(data[3].taxes).toEqual(0);
           doneFn();
         });
 
@@ -90,11 +123,5 @@ fdescribe('ProductsService', () => {
         req.flush(mockData);
         httpController.verify();
     });
-
-
-
   });
-
-
-
 });
