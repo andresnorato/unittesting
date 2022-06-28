@@ -4,6 +4,7 @@ import { HttpClientTestingModule, HttpTestingController } from '@angular/common/
 import { CreateProductDTO, Product, UpdateProductDTO } from '../models/product.model';
 import { environment } from 'src/environments/environment';
 import { generateManyProducts, generateOneProduct } from '../models/pruduct.mock';
+import { HttpStatusCode } from '@angular/common/http';
 
 fdescribe('ProductsService', () => {
   let productService: ProductsService;
@@ -164,41 +165,157 @@ fdescribe('ProductsService', () => {
       };
       const productId = '1';
       //Act
-      productService.update(productId, {...dto})
-      .subscribe(data =>{
-        expect(data).toEqual(mockData);
-        doneFn();
-    });
+      productService.update(productId, { ...dto })
+        .subscribe(data => {
+          expect(data).toEqual(mockData);
+          doneFn();
+        });
 
-    //http config
-    //URL de donde se hace la peticion
-    const url = `${environment.API_URL}/api/v1/products/${productId}`;
-    // Especificacion a donde debe realizar la peticion
-    const req = httpController.expectOne(url);
-    req.flush(mockData);
-    expect(req.request.body).toEqual(dto);
-    expect(req.request.method).toEqual('PUT');
+      //http config
+      //URL de donde se hace la peticion
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      // Especificacion a donde debe realizar la peticion
+      const req = httpController.expectOne(url);
+      req.flush(mockData);
+      expect(req.request.body).toEqual(dto);
+      expect(req.request.method).toEqual('PUT');
     });
   });
 
   describe('test for delete', () => {
     it('should delete a product', (doneFn) => {
-    //Arrage
-    const mockData = true;
-    const productId = '1';
+      //Arrage
+      const mockData = true;
+      const productId = '1';
 
-    productService.delete(productId)
-    .subscribe(data =>{
-      expect(data).toEqual(mockData);
-      doneFn();
+      productService.delete(productId)
+        .subscribe(data => {
+          expect(data).toEqual(mockData);
+          doneFn();
+        });
+      //http config
+      //URL de donde se hace la peticion
+      // Especificacion a donde debe realizar la peticion
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      const req = httpController.expectOne(url);
+      expect(req.request.method).toEqual('DELETE');
+      req.flush(mockData);
     });
-    //http config
-    //URL de donde se hace la peticion
-    // Especificacion a donde debe realizar la peticion
-    const url = `${environment.API_URL}/api/v1/products/${productId}`;
-    const req = httpController.expectOne(url);
-    expect(req.request.method).toEqual('DELETE');
-    req.flush(mockData);
+  });
+
+
+  describe('test for getOne', () => {
+    it('should return a product', (doneFn) => {
+      // Arrege
+      const mockData = generateOneProduct();
+      const productId = '1';
+
+      productService.getOne(productId)
+        .subscribe(data => {
+          expect(data).toEqual(mockData)
+          doneFn();
+        });
+
+      //http config
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      const req = httpController.expectOne(url);
+      expect(req.request.method).toEqual('GET');
+      req.flush(mockData);
+    });
+
+    it('should return right msg when status code is 404', (doneFn) => {
+      // Arrege
+      const productId = '1';
+      const msgError = '404 message';
+      const mockError = {
+        status: HttpStatusCode.NotFound,
+        statusText: msgError
+      }
+
+
+      productService.getOne(productId)
+        .subscribe({//error
+          error: (error) => {
+            expect(error).toEqual('El producto no existe');
+            doneFn();
+          }
+        });
+      //http config
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      const req = httpController.expectOne(url);
+      expect(req.request.method).toEqual('GET');
+      req.flush(msgError, mockError);
+    });
+
+
+    it('should return right msg when status code is 401', (doneFn) => {
+      // Arrege
+      const productId = '1';
+      const msgError = '401 message';
+      const mockError = {
+        status: HttpStatusCode.Unauthorized,
+        statusText: msgError
+      }
+
+
+      productService.getOne(productId)
+        .subscribe({//error
+          error: (error) => {
+            expect(error).toEqual('No estas permitido');
+            doneFn();
+          }
+        });
+      //http config
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      const req = httpController.expectOne(url);
+      expect(req.request.method).toEqual('GET');
+      req.flush(msgError, mockError);
+    });
+
+    it('should return right msg when status code is 409', (doneFn) => {
+      //Arrage
+      const productId = '4';
+      const msgError = '409 message';
+      const mockError = {
+        status: HttpStatusCode.Conflict,
+        statusText: msgError
+      }
+      //Act
+      productService.getOne(productId)
+        .subscribe({
+          error: (error) => {
+            expect(error).toEqual('Algo esta fallando en el server');
+            doneFn()
+          }
+        });
+      //Assert
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      const req = httpController.expectOne(url);
+      expect(req.request.method).toEqual('GET');
+      req.flush(msgError, mockError);
+    });
+
+    it('should return right msg when code is undefined', (doneFn) => {
+      //Arrage
+      const productId = '4';
+      const msgError = 'Error message';
+      const mockError = {
+        status: HttpStatusCode?.BadRequest,
+        statusText: msgError
+      }
+      //Act
+      productService.getOne(productId)
+        .subscribe({
+          error: (error) => {
+            expect(error).toEqual('Ups algo salio mal');
+            doneFn()
+          }
+        });
+      //Assert
+      const url = `${environment.API_URL}/api/v1/products/${productId}`;
+      const req = httpController.expectOne(url);
+      expect(req.request.method).toEqual('GET');
+      req.flush(msgError, mockError);
     });
   });
 });
